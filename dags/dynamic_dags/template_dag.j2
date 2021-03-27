@@ -1,8 +1,8 @@
 from datetime import datetime
 
-{% for i in operators %}
-import {{i}}
-{% endfor %}
+{% for i in operators -%}
+from {{'.'.join(i.split('.')[:-1])}} import {{i.split('.')[-1]}}
+{% endfor -%}
 
 from airflow import DAG
 
@@ -14,8 +14,8 @@ default_args = {
 
 
 with DAG(dag_id="{{dag_id}}_generated", schedule_interval="{{schedule_interval}}", catchup=False, default_args=default_args) as dag:
-{% for task in tasks %}
-    {{task.0}} = {{task.1}}(task_id="{{task.0}}")
-{% if task.2 is not none %}
+{%- for task in tasks %}
+    {{task.0}} = {{task.1.split('.')[-1]}}(task_id="{{task.0}}")
+{%- if task.2 is not none %}
     {{task.0}} << {{task.2}}
-{% endif %}{% endfor %}
+{%- endif %}{% endfor %}

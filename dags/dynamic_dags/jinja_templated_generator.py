@@ -14,7 +14,7 @@ default_args = {
 
 def _generate_jinja(**kwargs):
     input_fp = '/usr/local/airflow/dags/dynamic_dags/template_dag.j2'
-    output_fp = f'/usr/local/airflow/dags/dynamic_dags/generated/{dag_id}.py'
+    output_fp = f'/usr/local/airflow/dags/dynamic_dags/generated/{dag_id}_generated.py'
     with open(input_fp, 'r') as template, open(output_fp, 'w') as output:
         output.write(
             Template(template.read()).render(kwargs)
