@@ -2,4 +2,4 @@
 .env
 airflow_settings.yaml
 .idea
-identifier.sqlite
+dags/db/db.sqlite
