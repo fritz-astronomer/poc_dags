@@ -1,0 +1,84 @@
+version: '2'
+networks:
+  airflow:
+    driver: bridge
+volumes:
+  postgres_data:
+    driver: local
+  airflow_logs:
+    driver: local
+services:
+  postgres:
+    image: postgres:12.2
+    restart: unless-stopped
+    networks:
+      - airflow
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+  scheduler:
+    build: .
+    command: >
+      bash -c "(airflow upgradedb || airflow db upgrade) && airflow scheduler"
+    restart: unless-stopped
+    networks:
+      - airflow
+    user: astro
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+      io.astronomer.docker.component: "airflow-scheduler"
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW_CONN_SQLITE_DEFAULT: "sqlite://%2Fusr%2Flocal%2Fairflow%2Fdags%2Fdb%2Fdb.sqlite"
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql://postgres:postgres@postgres:5432
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__FERNET_KEY: "d6Vefz3G9U_ynXB3cr7y_Ak35tAHkEGAVxuz_B-jzWw="
+    volumes:
+      - ./dags:/usr/local/airflow/dags:z
+      - ./plugins:/usr/local/airflow/plugins:z
+      - ./include:/usr/local/airflow/include:z
+      - airflow_logs:/usr/local/airflow/logs
+  webserver:
+    build: .
+    command: >
+      bash -c 'if [[ -z "$$AIRFLOW__API__AUTH_BACKEND" ]] && [[ $$(pip show -f apache-airflow | grep basic_auth.py) ]];
+        then export AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic_auth ;
+        else export AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.default ; fi &&
+        { airflow create_user "$$@" || airflow users create "$$@" ; } &&
+        { airflow sync_perm || airflow sync-perm ;} &&
+        airflow webserver' -- -r Admin -u admin -e admin@example.com -f admin -l user -p admin
+    restart: unless-stopped
+    networks:
+      - airflow
+    user: astro
+    labels:
+      io.astronomer.docker: "true"
+      io.astronomer.docker.cli: "true"
+      io.astronomer.docker.component: "airflow-webserver"
+    depends_on:
+      - scheduler
+      - postgres
+    environment:
+      AIRFLOW_CONN_SQLITE_DEFAULT: "sqlite://%2Fusr%2Flocal%2Fairflow%2Fdags%2Fdb%2Fdb.sqlite"
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql://postgres:postgres@postgres:5432
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__FERNET_KEY: "d6Vefz3G9U_ynXB3cr7y_Ak35tAHkEGAVxuz_B-jzWw="
+      AIRFLOW__WEBSERVER__RBAC: "True"
+    ports:
+      - 8080:8080
+    volumes:
+      - ./dags:/usr/local/airflow/dags:ro
+      - ./plugins:/usr/local/airflow/plugins:z
+      - ./include:/usr/local/airflow/include:z
+      - airflow_logs:/usr/local/airflow/logs

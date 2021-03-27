@@ -8,7 +8,8 @@ Airflow's scheduler will connect to this database in `dags/dynamic_dags/cached_d
 ## Astro CLI
 Astronomer is a utility for quickly bringing up Airflow deployments, and hosting deployments on-prem or in the cloud.
 1) Download `astro` cli, [instructions here](https://www.astronomer.io/docs/cloud/stable/get-started/quickstart)
-2) Run `astro dev stop && astro dev start && astro dev logs -f`, to start or restart a local airflow stack
+2) ~~Run `astro dev stop && astro dev start && astro dev logs -f`, to start or restart a local airflow stack~~
+- Note: use `docker compose up` instead. Needed to fall-back to docker compose to mount the scheduler dags as read/write
 3) Go to [http://localhost:8080](http://localhost:8080) , after a few seconds (up to a minute)
 4) Log in with `admin:admin`
 

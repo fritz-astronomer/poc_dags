@@ -3,3 +3,5 @@
 airflow_settings.yaml
 .idea
 dags/db/db.sqlite
+dags/dynamic_dags/generated
+__pycache__
