@@ -25,5 +25,5 @@ Performance, stability, and maintainability may be negatively affected. Use with
 
 ### [jinja_templated_generator.py](./dags/dynamic_dags/jinja_templated_generator.py) 
 - Uses sqlite database results to dynamically generate a dag and it's tasks
-- Utilizes a helper DAG to assemble and produce the Jinja templates
+- Utilizes a helper DAG to assemble and produce the Jinja templates into DAGs on disk.
 - Can alleviate performance impacts for dynamic dags and tasks
